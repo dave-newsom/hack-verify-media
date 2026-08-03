@@ -10,6 +10,47 @@ Prove that media captured on an edge unit arrives in the cloud untampered.
 
 This repository is a **demo** of the hash and verify steps. It does not implement Mediator upload or ledger signing yet—only the integrity math you would run on the edge and again in the cloud.
 
+### Current flow
+
+Edge uploads media and a separate notice; Mediator forwards the notice for hydration. There is no integrity check against the object in S3.
+
+```mermaid
+sequenceDiagram
+  participant Edge
+  participant S3
+  participant Mediator
+  participant Hydration
+
+  Edge->>S3: Push video
+  Edge->>Mediator: Notice (deterrent or alert)
+  Mediator->>Hydration: Forward notice
+```
+
+### Target flow
+
+Edge builds a Merkle manifest first, then uploads the video and includes that manifest with the Mediator notice. Mediator verifies the S3 object against the manifest; on success it signs the digest to the ledger. The alert/notice path continues as today.
+
+```mermaid
+sequenceDiagram
+  participant Edge
+  participant S3
+  participant Mediator
+  participant Ledger
+  participant Hydration
+
+  Edge->>Edge: Produce Merkle manifest
+  Edge->>S3: Push video
+  Edge->>Mediator: Notice plus Merkle manifest
+  Mediator->>S3: Fetch video bytes
+  Mediator->>Mediator: Verify hash vs manifest
+  alt Manifest matches S3 object
+    Mediator->>Ledger: Sign digest to ledger
+  else Tamper or mismatch
+    Mediator-->>Mediator: Reject integrity claim
+  end
+  Mediator->>Hydration: Forward notice as normal
+```
+
 ## How hashing works
 
 - Split the file into fixed-size chunks (default **256 KiB**; last chunk may be shorter).
