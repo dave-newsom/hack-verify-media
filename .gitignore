@@ -1,0 +1,21 @@
+# Node.js modules
+node_modules/
+
+# Compiled TypeScript
+dist/
+
+# IntelliJ IDEA project files
+.idea/
+
+# TypeScript caches
+*.tsbuildinfo
+
+# Logs and temporary files
+logs/
+*.log
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+
+# MacOS files
+.DS_Store
