@@ -9,7 +9,7 @@ byte-padded for exact chunk sizes; see `fixtures/README.md`.
 - **File:** `media/steamboat_willie.mp4`, `media/demo_clip.mp4`
 - **Source:** https://archive.org/details/SteamboatWillie
 - **License:** Public Domain Mark 1.0 (US public domain as of 2024-01-01)
-- **Notes:** Extract starts after the Archive copy’s black leader/titles (~22s), steamboat action. Kept under 1 MiB without zero-padding.
+- **Notes:** Extract starts after the Archive copy’s black leader/titles (~22s), steamboat action. Prefer keeping under one default chunk without zero-padding.
 
 ## Copying Is Not Theft (Minute Meme #1)
 
@@ -33,7 +33,7 @@ byte-padded for exact chunk sizes; see `fixtures/README.md`.
 - **File:** `media/chaplin_laughing_gas.mp4` and `media/chaplin_laughing_gas_edit_chunk{0,2,4}.mp4`
 - **Source:** https://archive.org/details/CC_1914_07_09_LaffingGas
 - **License:** Public Domain
-- **Notes:** Extract sized to exactly 5 MiB (5 × 1 MiB chunks). Edit variants XOR bytes inside a single chunk window for integrity demos; they are derived fixtures, not separate works.
+- **Notes:** Extract sized to exactly 5 default chunks (5 × 256 KiB when regenerated). Edit variants XOR bytes inside a single chunk window for integrity demos; they are derived fixtures, not separate works.
 
 ## Empty / derived fixtures
 

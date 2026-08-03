@@ -6,10 +6,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/fixtures/media"
 CACHE="$ROOT/fixtures/.cache"
-CHUNK_SIZE=$((1024 * 1024)) # 1 MiB (matches src/main.ts)
-MIB_1=$CHUNK_SIZE
-MIB_2=$((CHUNK_SIZE * 2))
-MIB_5=$((CHUNK_SIZE * 5))
+CHUNK_SIZE=$((256 * 1024)) # 256 KiB (matches src/chunks.ts DEFAULT_CHUNK_SIZE)
+CHUNK_1=$CHUNK_SIZE
+CHUNK_5=$((CHUNK_SIZE * 5))
 
 need() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -72,7 +71,7 @@ print(f"Wrote {dest} ({len(data)} bytes)")
 PY
 }
 
-# XOR a few bytes inside one 1 MiB chunk window (does not re-encode).
+# XOR a few bytes inside one chunk window (does not re-encode).
 edit_chunk() {
   local src="$1"
   local dest="$2"
@@ -118,18 +117,18 @@ echo "==> Building sized fixtures"
 : > "$OUT/empty.mp4"
 
 # Archive copy has ~6.4s black leader + titles; steamboat action is clear by ~22s.
-# Keep natural size under 1 MiB (single chunk). Do not zero-pad (breaks some players).
+# Keep natural size under one chunk when possible. Do not zero-pad (breaks some players).
 encode_window "$CACHE/steamboat_willie_src.mp4" "$OUT/steamboat_willie.mp4" 22 7 0 28
 
-# Full minute meme, forced to exact 1 MiB (exact one-chunk boundary).
-encode_window "$CACHE/copying_is_not_theft_src.mp4" "$OUT/copying_is_not_theft.mp4" 0 60 "$MIB_1" 28
+# Full minute meme, forced to exact one-chunk boundary.
+encode_window "$CACHE/copying_is_not_theft_src.mp4" "$OUT/copying_is_not_theft.mp4" 0 60 "$CHUNK_1" 28
 
-# Slapstick stretch ~ mid film; size into (1 MiB, 2 MiB] => 2 chunks.
+# Slapstick stretch ~ mid film; size into (1 chunk, 2 chunks] => 2 chunks.
 # ~2:00 into BBB has the rodent / slingshot mayhem.
-encode_window "$CACHE/bbb_src.mp4" "$OUT/bbb_slapstick.mp4" 120 20 $((MIB_1 + MIB_1 / 2)) 28
+encode_window "$CACHE/bbb_src.mp4" "$OUT/bbb_slapstick.mp4" 120 20 $((CHUNK_1 + CHUNK_1 / 2)) 28
 
-# Chaplin slapstick sized to exactly 5 MiB => 5 chunks (odd leaf count).
-encode_window "$CACHE/chaplin_src.mp4" "$OUT/chaplin_laughing_gas.mp4" 0 90 "$MIB_5" 28
+# Chaplin slapstick sized to exactly 5 chunks (odd leaf count).
+encode_window "$CACHE/chaplin_src.mp4" "$OUT/chaplin_laughing_gas.mp4" 0 90 "$CHUNK_5" 28
 
 echo "==> Demo clip + simple tamper"
 cp "$OUT/steamboat_willie.mp4" "$OUT/demo_clip.mp4"
@@ -147,7 +146,7 @@ dest.write_bytes(data)
 print(f"Wrote {dest.name}: flipped byte at offset {offset}")
 PY
 
-echo "==> Per-chunk edit variants (Chaplin 5 MiB base)"
+echo "==> Per-chunk edit variants (Chaplin 5-chunk base)"
 edit_chunk "$OUT/chaplin_laughing_gas.mp4" "$OUT/chaplin_laughing_gas_edit_chunk0.mp4" 0
 edit_chunk "$OUT/chaplin_laughing_gas.mp4" "$OUT/chaplin_laughing_gas_edit_chunk2.mp4" 2
 edit_chunk "$OUT/chaplin_laughing_gas.mp4" "$OUT/chaplin_laughing_gas_edit_chunk4.mp4" 4
@@ -165,4 +164,5 @@ for path in sorted(out.glob("*.mp4")):
 PY
 
 echo "Done. Sources cached in fixtures/.cache (gitignored)."
-echo "Run: npm run -s merkle -- fixtures/media/chaplin_laughing_gas.mp4"
+echo "Run: npm run -s hash -- fixtures/media/chaplin_laughing_gas.mp4"
+echo "Verify: npm run -s verify -- <path-to-file> <expected-merkle.json>"

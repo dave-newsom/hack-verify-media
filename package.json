@@ -2,13 +2,13 @@
   "name": "hack-media-verify",
   "version": "1.0.0",
   "description": "Verify media has not been tampered with from the edge to the cloud.",
-  "main": "dist/index.js",
+  "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
-    "merkle": "ts-node src/main.ts",
-    "fixtures:fetch": "bash scripts/fetch-fixtures.sh",
-    "compare-chunks": "ts-node scripts/compare-chunks.ts"
+    "hash": "ts-node src/main.ts hash",
+    "verify": "ts-node src/main.ts verify",
+    "fixtures:fetch": "bash scripts/fetch-fixtures.sh"
   },
   "keywords": [],
   "author": "",
