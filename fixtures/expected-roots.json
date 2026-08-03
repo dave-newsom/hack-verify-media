@@ -1,0 +1,52 @@
+{
+  "bbb_slapstick.mp4": {
+    "chunkSize": 1048576,
+    "chunkCount": 2,
+    "merkleRoot": "dce9217a33ce3e50ce0ffb7b7c7cec31618c444b973d76d2ba7ba98d429c5add"
+  },
+  "chaplin_laughing_gas.mp4": {
+    "chunkSize": 1048576,
+    "chunkCount": 5,
+    "merkleRoot": "8a059e6a01f77b58eb53f7709840d8b8afcb233df4580ba7ff209a449772a607"
+  },
+  "chaplin_laughing_gas_edit_chunk0.mp4": {
+    "chunkSize": 1048576,
+    "chunkCount": 5,
+    "merkleRoot": "de690c7e7a88fe1aec699febb9fa351834a92497155815d03841dfdd7d5c396e"
+  },
+  "chaplin_laughing_gas_edit_chunk2.mp4": {
+    "chunkSize": 1048576,
+    "chunkCount": 5,
+    "merkleRoot": "876d885d5d31b6031fc56e5136fd17f1e75bbca4393022d3b9bd10193f26b58d"
+  },
+  "chaplin_laughing_gas_edit_chunk4.mp4": {
+    "chunkSize": 1048576,
+    "chunkCount": 5,
+    "merkleRoot": "a2162473d5ffe830ce3142ad3b18b33dc12cb8b46370da32eee3e606df04a74a"
+  },
+  "copying_is_not_theft.mp4": {
+    "chunkSize": 1048576,
+    "chunkCount": 1,
+    "merkleRoot": "fd40ce0846d5e5ce81103e2ec16c8c3b62e1f56656d0150e9145ebde93afb285"
+  },
+  "demo_clip.mp4": {
+    "chunkSize": 1048576,
+    "chunkCount": 1,
+    "merkleRoot": "1064fe5d826b4542ac6986dadaddebfaffdab8cb2907dc4619c2b6bac6e9e6bd"
+  },
+  "demo_clip_tampered.mp4": {
+    "chunkSize": 1048576,
+    "chunkCount": 1,
+    "merkleRoot": "082799d1d56feb83ddc1e0a17470cd9e6de4c9c6f7f3191a08d1393bed5f6eac"
+  },
+  "empty.mp4": {
+    "chunkSize": 1048576,
+    "chunkCount": 1,
+    "merkleRoot": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "steamboat_willie.mp4": {
+    "chunkSize": 1048576,
+    "chunkCount": 1,
+    "merkleRoot": "1064fe5d826b4542ac6986dadaddebfaffdab8cb2907dc4619c2b6bac6e9e6bd"
+  }
+}

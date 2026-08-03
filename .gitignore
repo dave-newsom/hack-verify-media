@@ -4,6 +4,9 @@ node_modules/
 # Compiled TypeScript
 dist/
 
+# Fixture download cache (committed outputs live in fixtures/media/)
+fixtures/.cache/
+
 # IntelliJ IDEA project files
 .idea/
 

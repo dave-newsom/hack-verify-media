@@ -12,7 +12,7 @@ export function buildMerkleRoot(leafHashes: Buffer[]): Buffer {
     throw new Error("Cannot build a Merkle root with no leaves.");
   }
 
-  let currentLevel = leafHashes.map((hash) => Buffer.from(hash));
+  let currentLevel: Buffer[] = leafHashes.map((hash) => Buffer.from(hash));
 
   while (currentLevel.length > 1) {
     const nextLevel: Buffer[] = [];
