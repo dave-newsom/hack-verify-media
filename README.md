@@ -8,7 +8,7 @@ Prove that media captured on an edge unit arrives in the cloud untampered.
 2. **Cloud** — On upload (for example through Mediator or a similar service), the same hashing is run again against the received bytes.
 3. **Ledger** — If the cloud hash matches the edge hash, the digest can be signed and written to a blockchain ledger. A match means the bytes were not altered in transit; the ledger anchors that claim to a specific unit and time.
 
-This repository is a **demo** of the hash and verify steps. It does not implement Mediator upload or ledger signing yet—only the integrity math you would run on the edge and again in the cloud.
+This repository is a **demo** of the hash and verify steps, plus a **local append-only ledger** that records Merkle roots. It does not implement Mediator upload, cryptographic signing, or a public blockchain yet—only the integrity math you would run on the edge and again in the cloud, and a local tamper-evident ledger standing in for the ledger step.
 
 ### Current flow
 
@@ -114,6 +114,33 @@ Larger chunks (for example 1 MiB):
 npm run -s hash -- fixtures/media/chaplin_laughing_gas.mp4 1048576
 ```
 
+## Ledger (local demo)
+
+`ledger.ts` is a stand-in for the **Ledger** step above: an append-only,
+hash-chained log of Merkle roots. Each block stores a media id, its Merkle root,
+a timestamp, the previous block's hash (`prevHash`), and its own `blockHash`
+(SHA-256 over the block's contents). Editing any block breaks the chain, which
+`validate` detects and pinpoints.
+
+> **Scope:** this is **tamper-evident, not tamper-proof** — anyone with write
+> access to the ledger file can rebuild the whole chain. Turning it into a truly
+> immutable ledger means committing the head hash to an external source of truth
+> (a public chain / signed anchor). The `Anchor`/`NoopAnchor` seam in `ledger.ts`
+> is where that plugs in (output shows `anchor local-only` until then). See
+> [docs/blockchain-ledger-report.md](docs/blockchain-ledger-report.md) for options.
+
+```bash
+# Append a block per file — each prints the new block as it lands
+npm run ledger -- append fixtures/media/demo_clip.mp4
+npm run ledger -- append fixtures/media/chaplin_laughing_gas.mp4
+
+npm run ledger -- list        # show the whole chain + validity
+npm run ledger -- validate    # exit 0 if intact, 1 if broken
+npm run ledger -- tamper 1    # DEMO: corrupt block #1, then re-run validate
+```
+
+The ledger is written to `./ledger.json`; override the path with `LEDGER_PATH`.
+
 ## Project layout
 
 ```text
@@ -122,7 +149,8 @@ src/
   chunks.ts       Exact file chunk hashing (default 256 KiB)
   merkle.ts       Merkle root over leaf hashes
   fileMerkle.ts   Orchestrate file → MerkleResult
-  verify.ts       verifyFile (-hash.md → -verified.md)
+  verify.ts       Compare actual vs expected Merkle JSON
+  ledger.ts       Append-only hash-chained ledger of Merkle roots (local demo)
   main.ts         CLI: hash | verify
 fixtures/         Sample media and golden roots
 scripts/          Fixture download / edit helpers

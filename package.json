@@ -8,6 +8,7 @@
     "start": "node dist/main.js",
     "hash": "ts-node src/main.ts hash",
     "verify": "ts-node src/main.ts verify",
+    "ledger": "ts-node src/ledger.ts",
     "fixtures:fetch": "bash scripts/fetch-fixtures.sh",
     "test": "tsc -p tsconfig.test.json && node --test dist-test/test/hash.test.js dist-test/test/merkle.test.js dist-test/test/chunks.test.js dist-test/test/fileMerkle.test.js dist-test/test/timing.test.js",
     "bench": "tsc -p tsconfig.test.json && node dist-test/test/bench.js"
