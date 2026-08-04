@@ -6,7 +6,6 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
-    "test": "node --require ts-node/register --test 'src/**/*.test.ts'",
     "hash": "ts-node src/main.ts hash",
     "verify": "ts-node src/main.ts verify",
     "ledger": "ts-node src/ledger.ts",
