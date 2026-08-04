@@ -114,10 +114,12 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error: unknown) => {
-  const message =
-    error instanceof Error ? error.message : "Unknown error occurred.";
+if (require.main === module) {
+  main().catch((error: unknown) => {
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred.";
 
-  console.error(`Failed: ${message}`);
-  process.exitCode = 1;
-});
+    console.error(`Failed to calculate Merkle root: ${message}`);
+    process.exitCode = 1;
+  });
+}

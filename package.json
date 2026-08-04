@@ -6,9 +6,16 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
+<<<<<<< HEAD
     "hash": "ts-node src/main.ts hash",
     "verify": "ts-node src/main.ts verify",
     "fixtures:fetch": "bash scripts/fetch-fixtures.sh"
+=======
+    "merkle": "ts-node src/main.ts",
+    "verify": "ts-node src/verify.ts",
+    "fixtures:fetch": "bash scripts/fetch-fixtures.sh",
+    "compare-chunks": "ts-node scripts/compare-chunks.ts"
+>>>>>>> 8257b74 (Adding file comparison and verification)
   },
   "keywords": [],
   "author": "",

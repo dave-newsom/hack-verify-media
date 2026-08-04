@@ -1,64 +1,40 @@
-import { readFileSync } from "node:fs";
-import type { MerkleResult } from "./fileMerkle";
+import { readFile, writeFile } from "node:fs/promises";
+import { extname } from "node:path";
 
-export type VerifyResult = {
-  matched: boolean;
-  chunkSize: number;
-  chunkCount: number;
-  changedChunkIndices: number[];
-  unchangedChunkIndices: number[];
-  expectedMerkleRoot: string;
-  actualMerkleRoot: string;
-};
+import { calculateFileMerkleRoot } from "./main";
 
-export function loadMerkleResult(path: string): MerkleResult {
-  const raw = JSON.parse(readFileSync(path, "utf8")) as MerkleResult;
-  if (
-    !Array.isArray(raw.chunkHashes) ||
-    typeof raw.merkleRoot !== "string" ||
-    typeof raw.chunkCount !== "number"
-  ) {
-    throw new Error(`Invalid Merkle JSON: ${path}`);
-  }
-  return raw;
+async function verifyFile(filePath: string): Promise<void> {
+  const ext = extname(filePath);
+  const basePath = ext ? filePath.slice(0, -ext.length) : filePath;
+  const hashFilePath = `${basePath}-hash.md`;
+  const verifiedFilePath = `${basePath}-verified.md`;
+
+  const storedHashRaw = await readFile(hashFilePath, "utf8");
+  const storedHash = JSON.parse(storedHashRaw) as { merkleRoot: string };
+
+  const { merkleRoot } = await calculateFileMerkleRoot(filePath);
+
+  const verified = merkleRoot === storedHash.merkleRoot;
+
+  await writeFile(verifiedFilePath, verified ? "VERIFIED" : "VERIFY FAILED");
 }
 
-export function verifyAgainstExpected(
-  actual: MerkleResult,
-  expected: MerkleResult,
-): VerifyResult {
-  if (actual.chunkSize !== expected.chunkSize) {
-    throw new Error(
-      `chunkSize mismatch: actual ${actual.chunkSize} vs expected ${expected.chunkSize}`,
-    );
+async function main(): Promise<void> {
+  const filePath = process.argv[2];
+
+  if (!filePath) {
+    console.error("Usage: npm run verify -- <path-to-file>");
+    process.exitCode = 1;
+    return;
   }
 
-  if (actual.chunkCount !== expected.chunkCount) {
-    throw new Error(
-      `chunkCount mismatch: actual ${actual.chunkCount} vs expected ${expected.chunkCount}`,
-    );
-  }
-
-  const changedChunkIndices: number[] = [];
-  const unchangedChunkIndices: number[] = [];
-
-  for (let i = 0; i < expected.chunkHashes.length; i += 1) {
-    if (actual.chunkHashes[i] === expected.chunkHashes[i]) {
-      unchangedChunkIndices.push(i);
-    } else {
-      changedChunkIndices.push(i);
-    }
-  }
-
-  const merkleRootMatched = actual.merkleRoot === expected.merkleRoot;
-
-  return {
-    matched: changedChunkIndices.length === 0 && merkleRootMatched,
-    chunkSize: actual.chunkSize,
-    chunkCount: actual.chunkCount,
-    changedChunkIndices,
-    unchangedChunkIndices,
-    expectedMerkleRoot: expected.merkleRoot,
-    actualMerkleRoot: actual.merkleRoot,
-  };
+  await verifyFile(filePath);
 }
+
+main().catch((error: unknown) => {
+  const message =
+    error instanceof Error ? error.message : "Unknown error occurred.";
+
+  console.error(`Failed to verify file: ${message}`);
+  process.exitCode = 1;
+});
