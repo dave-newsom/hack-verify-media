@@ -1,40 +1,36 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { extname } from "node:path";
 
-import { calculateFileMerkleRoot } from "./main";
+import { DEFAULT_CHUNK_SIZE } from "./chunks";
+import { calculateFileMerkleRoot } from "./fileMerkle";
 
-async function verifyFile(filePath: string): Promise<void> {
+export function sidecarBase(filePath: string): string {
   const ext = extname(filePath);
-  const basePath = ext ? filePath.slice(0, -ext.length) : filePath;
-  const hashFilePath = `${basePath}-hash.md`;
-  const verifiedFilePath = `${basePath}-verified.md`;
+  return ext ? filePath.slice(0, -ext.length) : filePath;
+}
 
-  const storedHashRaw = await readFile(hashFilePath, "utf8");
-  const storedHash = JSON.parse(storedHashRaw) as { merkleRoot: string };
+/**
+ * Re-hash `filePath`, compare against `<base>-hash.md`, write `<base>-verified.md`.
+ * Uses chunkSize from the sidecar when present so edge/cloud stay aligned.
+ */
+export async function verifyFile(filePath: string): Promise<boolean> {
+  const base = sidecarBase(filePath);
+  const hashFilePath = `${base}-hash.md`;
+  const verifiedFilePath = `${base}-verified.md`;
 
-  const { merkleRoot } = await calculateFileMerkleRoot(filePath);
+  const stored = JSON.parse(await readFile(hashFilePath, "utf8")) as {
+    merkleRoot: string;
+    chunkSize?: number;
+  };
 
-  const verified = merkleRoot === storedHash.merkleRoot;
+  const chunkSize =
+    typeof stored.chunkSize === "number" && stored.chunkSize > 0
+      ? stored.chunkSize
+      : DEFAULT_CHUNK_SIZE;
+
+  const { merkleRoot } = await calculateFileMerkleRoot(filePath, chunkSize);
+  const verified = merkleRoot === stored.merkleRoot;
 
   await writeFile(verifiedFilePath, verified ? "VERIFIED" : "VERIFY FAILED");
+  return verified;
 }
-
-async function main(): Promise<void> {
-  const filePath = process.argv[2];
-
-  if (!filePath) {
-    console.error("Usage: npm run verify -- <path-to-file>");
-    process.exitCode = 1;
-    return;
-  }
-
-  await verifyFile(filePath);
-}
-
-main().catch((error: unknown) => {
-  const message =
-    error instanceof Error ? error.message : "Unknown error occurred.";
-
-  console.error(`Failed to verify file: ${message}`);
-  process.exitCode = 1;
-});

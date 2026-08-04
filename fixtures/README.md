@@ -29,16 +29,10 @@ See [LICENSES.md](./LICENSES.md) for attribution.
 
 ## Chunk-edit demo
 
-Show that tampering one chunk changes only that leaf hash (and the Merkle root):
-
 ```bash
-npm run -s hash -- fixtures/media/chaplin_laughing_gas.mp4 > /tmp/expected.json
-npm run -s verify -- fixtures/media/chaplin_laughing_gas.mp4 /tmp/expected.json
-npm run -s verify -- fixtures/media/chaplin_laughing_gas_edit_chunk2.mp4 /tmp/expected.json
+npm run -s hash -- fixtures/media/chaplin_laughing_gas.mp4
+npm run -s verify -- fixtures/media/chaplin_laughing_gas.mp4
+# → chaplin_laughing_gas-verified.md = VERIFIED
 ```
-
-Untampered verify exits 0 with `matched: true`. Edited file exits 1 with `changedChunkIndices: [2]` and `matched: false`.
-
-Try `edit_chunk0` or `edit_chunk4` the same way to see different indices light up.
 
 Golden `merkleRoot` values for each committed fixture are in [`expected-roots.json`](./expected-roots.json).

@@ -77,14 +77,16 @@ See [fixtures/README.md](fixtures/README.md) for fixture details and licenses.
 
 | Command | Purpose |
 |---------|---------|
-| `npm run hash -- <file> [chunk-size-bytes]` | Hash a media file; print Merkle JSON to stdout |
-| `npm run verify -- <file> <expected.json>` | Hash `<file>` (using `chunkSize` from expected JSON) and check it |
+| `npm run hash -- <file> [chunk-size-bytes]` | Hash a media file; print Merkle JSON and write `<file>-hash.md` |
+| `npm run verify -- <file>` | Re-hash `<file>`, compare to `<file>-hash.md`, write `<file>-verified.md` |
+| `npm run test` | Unit tests + loose timing/resource checks |
+| `npm run bench` | Print wall/CPU/memory table for synthetic sizes (and Chaplin if present) |
 | `npm run build` | Compile TypeScript to `dist/` |
 | `npm start -- hash \| verify …` | Run the compiled CLI the same way |
 
-Default chunk size is `262144` (256 KiB). Override on hash with a trailing byte size, for example `1048576` for 1 MiB. `verify` always uses the `chunkSize` stored in the expected JSON so edge and cloud stay aligned.
+Default chunk size is `262144` (256 KiB). Override on hash with a trailing byte size, for example `1048576` for 1 MiB.
 
-`verify` exits `0` when `matched` is true, and `1` on mismatch or error.
+`verify` exits `0` on success and `1` on mismatch or error.
 
 ### Hash output shape
 
@@ -92,28 +94,19 @@ Default chunk size is `262144` (256 KiB). Override on hash with a trailing byte 
 {
   "chunkSize": 262144,
   "chunkCount": 5,
-  "chunkHashes": ["…", "…"],
   "merkleRoot": "…"
 }
 ```
 
-Save that JSON as the “expected” digest from the edge. Cloud verify loads it and compares against a fresh hash of the uploaded file.
+Lean on purpose: no per-chunk hex list (saves RAM/disk on device). `hash` writes that JSON to `<file>-hash.md` for verify.
 
 ## Demo
 
-Hash a clean fixture (edge), then verify the same file and a tampered copy (cloud):
-
 ```bash
-npm run -s hash -- fixtures/media/chaplin_laughing_gas.mp4 > expected.json
-
-# Same bytes → match
-npm run -s verify -- fixtures/media/chaplin_laughing_gas.mp4 expected.json
-
-# One chunk edited → fail; changedChunkIndices includes 2
-npm run -s verify -- fixtures/media/chaplin_laughing_gas_edit_chunk2.mp4 expected.json
+npm run -s hash -- fixtures/media/chaplin_laughing_gas.mp4
+npm run -s verify -- fixtures/media/chaplin_laughing_gas.mp4
+# → chaplin_laughing_gas-verified.md contains VERIFIED
 ```
-
-Untampered verify prints `matched: true`. The edited file prints `matched: false` and which leaf hashes changed, so you can see that only the tampered chunk fails while others still match.
 
 Larger chunks (for example 1 MiB):
 
@@ -129,7 +122,7 @@ src/
   chunks.ts       Exact file chunk hashing (default 256 KiB)
   merkle.ts       Merkle root over leaf hashes
   fileMerkle.ts   Orchestrate file → MerkleResult
-  verify.ts       Compare actual vs expected Merkle JSON
+  verify.ts       verifyFile (-hash.md → -verified.md)
   main.ts         CLI: hash | verify
 fixtures/         Sample media and golden roots
 scripts/          Fixture download / edit helpers

@@ -3,6 +3,7 @@ node_modules/
 
 # Compiled TypeScript
 dist/
+dist-test/
 
 # Fixture download cache (committed outputs live in fixtures/media/)
 fixtures/.cache/
@@ -13,9 +14,9 @@ fixtures/.cache/
 # TypeScript caches
 *.tsbuildinfo
 
-# Logs and temporary files
-logs/
-*.log
+# Sidecar outputs from hash/verify
+*-hash.md
+*-verified.md
 yarn-debug.log*
 yarn-error.log*
 npm-debug.log*
