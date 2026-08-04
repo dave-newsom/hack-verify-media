@@ -1,72 +1,40 @@
-import { readFileSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
+import { extname } from "node:path";
 
+import { DEFAULT_CHUNK_SIZE } from "./chunks";
+import { calculateFileMerkleRoot } from "./fileMerkle";
 import type { MerkleResult } from "./fileMerkle";
 
-export type VerificationResult = {
-  matched: boolean;
-  expectedMerkleRoot: string;
-  actualMerkleRoot: string;
-  chunkSizeMatched: boolean;
-  chunkCountMatched: boolean;
-  changedChunkIndices: number[];
-  unchangedChunkIndices: number[];
-};
-
-/** Load and validate an expected-Merkle JSON file (as produced by `hash`). */
-export function loadMerkleResult(path: string): MerkleResult {
-  const raw = JSON.parse(readFileSync(path, "utf8")) as Partial<MerkleResult>;
-
-  if (
-    typeof raw.merkleRoot !== "string" ||
-    typeof raw.chunkSize !== "number" ||
-    typeof raw.chunkCount !== "number" ||
-    !Array.isArray(raw.chunkHashes)
-  ) {
-    throw new Error(`Invalid expected Merkle JSON: ${path}`);
-  }
-
-  return {
-    chunkSize: raw.chunkSize,
-    chunkCount: raw.chunkCount,
-    chunkHashes: raw.chunkHashes,
-    merkleRoot: raw.merkleRoot,
-  };
+export function sidecarBase(filePath: string): string {
+  const ext = extname(filePath);
+  return ext ? filePath.slice(0, -ext.length) : filePath;
 }
 
 /**
- * Compare a freshly computed Merkle result against a stored expectation.
- * Reports which chunk (leaf) indices differ so a caller can see exactly where
- * the bytes changed, not just that the roots disagree.
+ * Re-hash `filePath`, compare against `<base>-hash.md`, write `<base>-verified.md`.
+ * Uses chunkSize from the sidecar when present so edge/cloud stay aligned.
  */
-export function verifyAgainstExpected(
-  actual: MerkleResult,
-  expected: MerkleResult,
-): VerificationResult {
-  const chunkSizeMatched = actual.chunkSize === expected.chunkSize;
-  const chunkCountMatched = actual.chunkCount === expected.chunkCount;
+export async function verifyFile(filePath: string): Promise<MerkleResult> {
+  const base = sidecarBase(filePath);
+  const hashFilePath = `${base}-hash.md`;
+  const verifiedFilePath = `${base}-verified.md`;
 
-  const changedChunkIndices: number[] = [];
-  const unchangedChunkIndices: number[] = [];
-  const maxChunks = Math.max(
-    actual.chunkHashes.length,
-    expected.chunkHashes.length,
-  );
+  const stored = JSON.parse(await readFile(hashFilePath, "utf8")) as MerkleResult;
 
-  for (let i = 0; i < maxChunks; i += 1) {
-    if (actual.chunkHashes[i] === expected.chunkHashes[i]) {
-      unchangedChunkIndices.push(i);
-    } else {
-      changedChunkIndices.push(i);
-    }
-  }
+  const chunkSize =
+    typeof stored.chunkSize === "number" && stored.chunkSize > 0
+      ? stored.chunkSize
+      : DEFAULT_CHUNK_SIZE;
+
+  const { merkleRoot } = await calculateFileMerkleRoot(filePath, chunkSize);
+  const verified = merkleRoot === stored.merkleRoot;
+
+  await writeFile(verifiedFilePath, verified ? "VERIFIED" : "VERIFY FAILED");
 
   return {
-    matched: chunkSizeMatched && actual.merkleRoot === expected.merkleRoot,
-    expectedMerkleRoot: expected.merkleRoot,
-    actualMerkleRoot: actual.merkleRoot,
-    chunkSizeMatched,
-    chunkCountMatched,
-    changedChunkIndices,
-    unchangedChunkIndices,
+    verified,
+    chunkSize: stored.chunkSize,
+    chunkCount: stored.chunkCount,
+    merkleRoot: stored.merkleRoot,
   };
 }

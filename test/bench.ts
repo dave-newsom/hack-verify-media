@@ -89,7 +89,7 @@ async function measureVerify(
 ): Promise<Measurement> {
   // Warm path with the same sidecar outcome we're about to measure.
   const warmed = await verifyFile(sample.path);
-  if (warmed !== expectMatch) {
+  if (warmed.verified !== expectMatch) {
     throw new Error(
       `verify warmup mismatch for ${sample.label} (${labelSuffix}): got ${warmed}`,
     );
@@ -109,7 +109,7 @@ async function measureVerify(
   const cpu = process.cpuUsage(cpuBefore);
   const memAfter = process.memoryUsage();
 
-  if (matched !== expectMatch) {
+  if (matched.verified !== expectMatch) {
     throw new Error(
       `verify result mismatch for ${sample.label} (${labelSuffix}): got ${matched}`,
     );
@@ -120,7 +120,7 @@ async function measureVerify(
     bytes: sample.bytes,
     chunkSize: sample.chunkSize,
     chunkCount,
-    matched,
+    matched: matched.verified,
     wallMs,
     userMs: cpu.user / 1000,
     systemMs: cpu.system / 1000,

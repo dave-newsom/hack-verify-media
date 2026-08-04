@@ -6,6 +6,7 @@ export type MerkleResult = {
   chunkSize: number;
   chunkCount: number;
   merkleRoot: string;
+  verified?: boolean;
 };
 
 export async function calculateFileMerkleRoot(
